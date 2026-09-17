@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#030A06">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>1983 值班之夜</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Press+Start+2P&display=swap">
+<style>
+  :root {
+    --ground: #030A06;
+    --panel: #061109;
+    --line: #0E3A1F;
+    --line-2: #145430;
+    --green: #35E87A;
+    --green-hi: #7BFFB0;
+    --green-dim: #1C8F4C;
+    --red: #FF4A3D;
+    --red-dim: #8C241C;
+    --amber: #F2C13C;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--green);
+    font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 15px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .zh { font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", "Hiragino Sans", sans-serif; }
+
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 5;
+    background: repeating-linear-gradient(to bottom,
+      rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0.22) 3px, rgba(0,0,0,0.22) 4px);
+    contain: strict;
+  }
+  body.cine::after { opacity: 0.45; }
+
+  #console {
+    position: relative; z-index: 1; min-height: 100%;
+    display: flex; flex-direction: column;
+    max-width: 900px; margin: 0 auto;
+    padding: 0 16px; padding-block: 18px 26px; gap: 12px;
+  }
+
+  .bar {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--line);
+    font-size: 12px; letter-spacing: 0.16em; color: var(--green-dim);
+  }
+  .bar strong { color: var(--green-hi); font-weight: 600; text-shadow: 0 0 6px rgba(53,232,122,0.45); }
+  .bar .spacer { flex: 1 1 auto; }
+  .bar #impact { color: var(--red); }
+  body.alert .bar strong { background: var(--red); color: #0A0300; padding: 0 5px; text-shadow: none; }
+  @media (prefers-reduced-motion: no-preference) {
+    body.alert .bar strong { animation: blink 0.9s steps(2, end) infinite; }
+    @keyframes blink { 50% { opacity: 0.25; } }
+  }
+
+  #meter { height: 2px; background: var(--line); position: relative; overflow: hidden; }
+  #meter-fill {
+    position: absolute; inset: 0 auto 0 0; width: 100%;
+    background: var(--green); transform-origin: left center;
+    box-shadow: 0 0 8px rgba(53,232,122,0.6);
+  }
+  body.alert #meter-fill { background: var(--red); box-shadow: 0 0 8px rgba(255,74,61,0.6); }
+
+  .brief h1 { text-shadow: 0 0 8px rgba(53,232,122,0.3); font-size: 26px; line-height: 1.3; margin: 2px 0 4px; font-weight: 600; color: var(--green-hi); text-wrap: balance; }
+  .brief h1 .zh { display: block; font-size: 23px; margin-top: 4px; color: var(--green); }
+  .brief .meta { font-size: 12px; letter-spacing: 0.2em; color: var(--green-dim); margin: 0 0 12px; }
+  .bl { margin: 0 0 14px; max-width: 66ch; }
+  .bl .en { display: block; color: var(--green-dim); }
+  .bl .zh { display: block; color: var(--green); }
+  .rule { border: 1px solid var(--line-2); padding: 12px 14px; margin: 16px 0; background: var(--panel); }
+  .rule h2 { font-size: 11px; letter-spacing: 0.2em; color: var(--green-dim); margin: 0 0 8px; font-weight: 600; }
+  .rule .bl:last-child { margin-bottom: 0; }
+  .rule b { color: var(--green-hi); font-weight: 600; }
+
+  #stage { flex: 1 1 auto; display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 660px) { #stage { grid-template-columns: 1fr; } #scope-wrap { justify-self: center; } }
+  #scope-wrap { width: 100%; max-width: 300px; }
+  body.playing #scope-wrap { max-width: min(300px, 44vh); }
+  #scope { width: 100%; height: auto; max-width: 100%; display: block; }
+  .scope-cap { font-size: 11px; letter-spacing: 0.16em; color: var(--green-dim); display: flex; justify-content: space-between; margin-top: 6px; }
+  .scope-cap #scope-count { color: var(--red); }
+
+  #log {
+    display: flex; flex-direction: column; justify-content: flex-end;
+    gap: 9px; max-height: 380px; overflow: hidden; padding-right: 4px;
+  }
+  .entry { border-left: 2px solid var(--line-2); padding-left: 11px; }
+  .entry .head { font-size: 11px; letter-spacing: 0.16em; color: var(--green-dim); display: flex; gap: 10px; }
+  .entry .en { display: block; font-size: 13.5px; color: var(--green-dim); }
+  .entry .zh { display: block; font-size: 15.5px; color: var(--green); }
+  .entry.warn { border-left-color: var(--red); }
+  .entry.warn .head { color: var(--red); }
+  .entry.warn .en { color: #C4675C; }
+  .entry.warn .zh { color: #FF8A7D; }
+  .entry b { color: var(--green-hi); font-weight: 600; }
+  .entry.warn b { color: #FFD2CC; }
+
+  .entry.finding {
+    border: 1px solid rgba(242,193,60,0.45);
+    border-left: 3px solid var(--amber);
+    background: rgba(242,193,60,0.06);
+    padding: 10px 13px;
+    text-shadow: 0 0 8px rgba(242,193,60,0.4);
+  }
+  .entry.finding .head { color: var(--amber); }
+  .entry.finding .en { color: #C99B36; font-size: 15px; line-height: 1.4; font-weight: 500; }
+  .entry.finding .zh { color: #FFE39A; font-size: 21px; line-height: 1.45; font-weight: 500; }
+  .entry.finding b { color: #FFF3C4; }
+
+  #actions { display: grid; gap: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .group h3 {
+    display: flex; align-items: center; gap: 9px;
+    margin: 0 0 7px; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.16em; color: var(--amber);
+  }
+  .group h3 .tag {
+    flex: 0 0 auto; padding: 3px 9px;
+    background: var(--amber); color: #140C00;
+    letter-spacing: 0.14em; white-space: nowrap;
+  }
+  .group h3 .lab { flex: 0 1 auto; letter-spacing: 0.04em; font-weight: 400; opacity: 0.85; }
+  .group h3::after { content: ""; flex: 1 1 auto; height: 1px; background: currentColor; opacity: 0.32; }
+  .group.decide-group h3 { color: var(--red); }
+  .group.decide-group h3 .tag { background: var(--red); color: #160300; }
+  .group { display: grid; gap: 7px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .checks, .decides { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 560px) { .pair { grid-template-columns: 1fr; } }
+  .hint { font-size: 13px; color: var(--green-dim); margin: 0; }
+
+  button {
+    font: inherit; text-align: left; padding: 10px 13px;
+    background: transparent; color: var(--green);
+    border: 1px solid var(--line-2); cursor: pointer;
+    transition: background 110ms;
+  }
+  button:hover:not(:disabled) { background: rgba(53,232,122,0.08); }
+  button:focus-visible { outline: 2px solid var(--green-hi); outline-offset: 2px; }
+  button:disabled { opacity: 0.28; cursor: default; }
+  button .k { display: block; font-size: 11px; letter-spacing: 0.18em; color: var(--green-dim); margin-bottom: 2px; }
+  button .en { display: block; font-size: 13.5px; }
+  button .zh { display: block; font-size: 14.5px; color: var(--green-dim); }
+  button .n { color: var(--amber); }
+  button.decide { border-color: var(--red-dim); }
+  button.decide .k { color: var(--red); }
+  button.start {
+    text-align: center; background: var(--green); color: #020803;
+    border-color: var(--green); font-weight: 600; padding: 13px;
+    text-shadow: none; letter-spacing: 0.08em;
+  }
+  button.start:hover { background: var(--green-hi); }
+  button.ghost { margin-top: 10px; }
+  #busy { font-size: 13.5px; color: var(--amber); margin: 0; min-height: 1.5em; }
+  .mini { display: none; }
+
+  /* ===== 遊戲進行中：整頁不捲動，只有訊息區內捲 ===== */
+  body.playing #console { min-height: 100%; }
+  body.playing #stage { align-items: start; }
+  body.playing #actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    background: var(--ground);
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+  body.playing #log {
+    height: min(22vh, 200px);
+    min-height: 96px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: rgba(6, 17, 9, 0.55);
+    padding: 9px 11px 11px;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 30px);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 30px);
+  }
+
+  /* ===== 手機：一屏到底 ===== */
+  @media (max-width: 660px) {
+    body.playing #console { gap: 8px; padding-block: 10px 12px; }
+    body.playing .bar { font-size: 11px; gap: 2px 10px; padding-bottom: 5px; }
+    body.playing #stage { gap: 8px; grid-template-columns: 1fr; justify-items: center; }
+    body.playing #log {
+      width: 100%; padding: 7px 9px 9px;
+      height: 21vh; min-height: 88px;
+    }
+    body.playing #scope-wrap { max-width: min(240px, 36vh); }
+    body.playing .scope-cap { margin-top: 3px; font-size: 9px; }
+    body.playing #log { gap: 6px; }
+    body.playing .entry { padding-left: 8px; }
+    body.playing .entry .head { font-size: 10px; gap: 7px; }
+    body.playing .entry .en { font-size: 13px; }
+    body.playing .entry .zh { font-size: 14.5px; color: var(--green); }
+    body.playing .entry.finding { padding: 7px 9px; }
+    body.playing .entry.finding .zh { font-size: 20px; }
+
+    body.playing #actions { gap: 8px; padding-top: 8px; }
+    body.playing .group h3 { margin: 0 0 4px; font-size: 10px; gap: 7px; }
+    body.playing .group h3 .tag { padding: 2px 7px; }
+    body.playing .group h3 .lab { display: none; }
+    body.playing .group { gap: 6px; }
+    body.playing #busy { font-size: 13px; min-height: 0; }
+    body.playing .hint { display: none; }
+
+    body.playing #actions .checks {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+    }
+    body.playing #actions .checks button { padding: 6px 3px; text-align: center; }
+    body.playing #actions .checks .k { display: none; }
+    body.playing .checks .mini .me {
+      display: block; font-size: 11px; line-height: 1.3; letter-spacing: 0.02em;
+      color: var(--amber); margin-bottom: 3px;
+    }
+
+    body.playing #actions .decides { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    body.playing #actions .decides button { padding: 10px 6px; text-align: center; }
+    body.playing #actions .decides .k { font-size: 10.5px; letter-spacing: 0.08em; }
+
+    body.playing button .en, body.playing button .zh { display: none; }
+    body.playing button .mini { display: block; font-size: 16px; color: var(--green); }
+    body.playing .decides button .mini { font-size: 19px; font-weight: 600; }
+    body.playing button .mini .n { font-size: 14px; }
+  }
+
+  #cine { display: grid; gap: 12px; place-items: center; padding-block: 8px; }
+  #cine-canvas {
+    width: 100%; max-width: 620px; height: auto;
+    image-rendering: pixelated; image-rendering: crisp-edges;
+    border: 1px solid var(--line-2); background: #0B0B0F;
+  }
+  #cine-cap { text-align: center; min-height: 64px; }
+  #cine-cap .en {
+    display: block; font-family: "Press Start 2P", "IBM Plex Mono", monospace;
+    font-size: 12px; line-height: 1.8; letter-spacing: 0.04em;
+    color: #F4F6F8; text-shadow: 0 0 10px rgba(255,74,61,0.5);
+  }
+  #cine-cap .zh { display: block; font-size: 19px; margin-top: 8px; color: var(--red); text-shadow: 0 0 10px rgba(255,74,61,0.4); }
+  #cine-skip {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    letter-spacing: 0.16em; color: var(--green-dim);
+    border-color: var(--line); padding: 6px 12px; text-align: center;
+  }
+
+  .ending .verdict { font-size: 40px; line-height: 1.15; font-weight: 600; color: var(--green-hi); margin: 2px 0 4px; }
+  .ending .verdict .en {
+    display: block; font-family: "Press Start 2P", "IBM Plex Mono", monospace;
+    font-size: 15px; letter-spacing: 0.04em; color: var(--green-dim);
+    margin-bottom: 12px; text-shadow: none;
+  }
+  .ending h2 { font-size: 18px; font-weight: 500; margin: 14px 0 12px; color: var(--green); }
+  .ending .bl.alarm .en { color: #C4675C; }
+  .ending .bl.alarm .zh { color: var(--red); font-weight: 600; }
+
+  #modal {
+    position: fixed; inset: 0; z-index: 8;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(3, 10, 6, 0.72);
+    padding: 16px;
+  }
+  .modal-box {
+    width: 100%; max-width: 460px;
+    border: 1px solid var(--red);
+    background: #120603;
+    padding: 18px 20px 20px;
+    text-align: center;
+    box-shadow: 0 0 24px rgba(255, 74, 61, 0.25);
+  }
+  .modal-en {
+    font-size: 12px; letter-spacing: 0.14em; color: #C4675C;
+    margin-bottom: 6px;
+  }
+  .modal-zh {
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    font-size: 21px; font-weight: 600; color: var(--red);
+    text-shadow: 0 0 10px rgba(255,74,61,0.4);
+  }
+  .modal-count {
+    margin-top: 14px; font-size: 52px; line-height: 1;
+    font-weight: 600; color: var(--red);
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 14px rgba(255,74,61,0.45);
+  }
+
+  .sheet { border: 1px solid var(--line-2); background: var(--panel); padding: 12px 14px; margin: 20px 0 0; }
+  .sheet h3 { font-size: 11px; letter-spacing: 0.2em; color: var(--green-dim); margin: 0 0 8px; font-weight: 600; }
+  .sheet dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 5px 16px; font-size: 14.5px; }
+  .sheet dt { color: var(--green-dim); }
+  .sheet dd { margin: 0; color: var(--green-hi); }
+</style>
+</head>
+<body>
+<div id="console">
+
+  <div class="bar">
+    <span><strong id="sys">SPRN / СПРН</strong></span>
+    <span>SERPUKHOV-15</span>
+    <span class="spacer"></span>
+    <span id="clock">26.09.1983 · 00:14:05</span>
+    <span id="impact" hidden></span>
+  </div>
+
+  <div id="meter" hidden><div id="meter-fill"></div></div>
+
+  <section class="brief" id="brief1">
+    <p class="meta">DUTY BRIEFING · 值勤簡報</p>
+    <h1>You are tonight's duty officer.<span class="zh">你是今晚的值班軍官。</span></h1>
+    <p class="bl">
+      <span class="en">26 September 1983, just after midnight. An underground command post south of Moscow, code name Serpukhov-15. Your screens are wired to the Oko early-warning satellites.</span>
+      <span class="zh">1983 年 9 月 26 日，午夜過後。莫斯科南方的地下指揮所，代號 Серпухов-15。你的螢幕連著 Око 預警衛星網。</span>
+    </p>
+    <p class="bl">
+      <span class="en">Your job is one thing only: decide whether what is on the screen is real, and whether to report it.</span>
+      <span class="zh">你的職責只有一件事：判斷螢幕上的東西是不是真的，然後決定要不要上報。</span>
+    </p>
+    <button class="start" id="next1">CONTINUE · 確認，下一步</button>
+  </section>
+
+  <section class="brief" id="brief2" hidden>
+    <p class="meta">STANDING DOCTRINE · 當時的準則</p>
+    <div class="rule">
+      <p class="bl">
+        <span class="en">Soviet doctrine is <b>launch on warning</b>. Once your report goes up the chain, the counter-strike sequence begins.</span>
+        <span class="zh">蘇聯採取<b>「預警即發射」</b>。你的報告一旦沿指揮鏈上傳，反擊程序就會啟動。</span>
+      </p>
+      <p class="bl">
+        <span class="en">And if the duty officer never confirms the warning, <b>the counter-strike sequence proceeds under doctrine anyway.</b></span>
+        <span class="zh">若值班軍官最終未能協助確認預警狀態，<b>將依準則直接啟動核反擊。</b></span>
+      </p>
+    </div>
+    <div class="rule">
+      <h2>VERIFICATION · 查證</h2>
+      <p class="bl">
+        <span class="en">Checks open once all launches have been plotted, and may be run as many times as you like. <b>Every check costs time. Headquarters will not wait forever.</b></span>
+        <span class="zh">所有發射標定完成後，查證管道才會開放，之後次數不限。<b>但每一次查證都要花時間，而指揮部不會一直等下去。</b></span>
+      </p>
+      <p class="bl">
+        <span class="en">Three checks are available:<br>
+          <b>RECHECK RADAR</b> — order another ground-radar pass (12s)<br>
+          <b>CHECK FAULT LOG</b> — pull the satellite fault record (10s)<br>
+          <b>HOLD HQ</b> — tell headquarters you are still verifying (6s)</span>
+        <span class="zh">可用的查證有三種：<br>
+          <b>RECHECK RADAR</b>　要求地面雷達複查（12 秒）<br>
+          <b>CHECK FAULT LOG</b>　調閱衛星故障紀錄（10 秒）<br>
+          <b>HOLD HQ</b>　回覆指揮部仍在查證（6 秒）</span>
+      </p>
+    </div>
+    <button class="start" id="go">BEGIN WATCH · 開始值勤</button>
+  </section>
+
+  <div id="stage" hidden>
+    <div id="scope-wrap">
+      <canvas id="scope" width="380" height="380" aria-label="Radar scope"></canvas>
+      <div class="scope-cap">
+        <span id="scope-count">TRACKS 0</span>
+        <span>OKO / ОКО</span>
+      </div>
+    </div>
+    <div id="log"></div>
+  </div>
+
+  <div id="actions" hidden>
+    <p id="busy"></p>
+    <div class="group">
+      <h3><span class="tag">VERIFY · 查證</span><span class="lab zh">次數不限，不會結束值班 · Repeatable</span></h3>
+      <div class="pair checks">
+        <button id="chk-radar">
+          <span class="k">RECHECK RADAR · 12s</span>
+          <span class="en">Order another ground-radar pass</span>
+          <span class="zh">要求地面雷達複查<span class="n" id="n-radar"></span></span>
+          <span class="mini"><span class="me">RECHECK RADAR · 12s</span>雷達複查<span class="n" id="m-radar"></span></span>
+        </button>
+        <button id="chk-log">
+          <span class="k">CHECK FAULT LOG · 10s</span>
+          <span class="en">Pull the satellite fault record</span>
+          <span class="zh">調閱衛星系統故障紀錄<span class="n" id="n-log"></span></span>
+          <span class="mini"><span class="me">CHECK FAULT LOG · 10s</span>故障紀錄<span class="n" id="m-log"></span></span>
+        </button>
+        <button id="chk-hq">
+          <span class="k">HOLD HQ · 6s</span>
+          <span class="en">Tell headquarters you are still verifying</span>
+          <span class="zh">回覆指揮部：仍在查證<span class="n" id="n-hq"></span></span>
+          <span class="mini"><span class="me">HOLD HQ · 6s</span>拖延回覆<span class="n" id="m-hq"></span></span>
+        </button>
+      </div>
+    </div>
+    <div class="group decide-group">
+      <h3><span class="tag">DECIDE · 決定</span><span class="lab zh">按下後立即結束值班 · Ends your watch</span></h3>
+      <div class="pair decides">
+        <button class="decide" id="btn-report">
+          <span class="k">CONFIRM ATTACK</span>
+          <span class="en">Confirm missile attack</span>
+          <span class="zh">確認敵襲</span>
+          <span class="mini">確認敵襲</span>
+        </button>
+        <button class="decide" id="btn-silent">
+          <span class="k">NO ACTION</span>
+          <span class="en">Take no action</span>
+          <span class="zh">不處置</span>
+          <span class="mini">不處置</span>
+        </button>
+        <button class="decide" id="btn-mal">
+          <span class="k">JUDGE ERROR</span>
+          <span class="en">Judge it a system error</span>
+          <span class="zh">判定誤報</span>
+          <span class="mini">判定誤報</span>
+        </button>
+      </div>
+    </div>
+    <p class="hint">
+      <span id="hint-en">Monitoring. Nothing requires your decision yet.</span>
+      <span class="zh" id="hint-zh"> · 監控中，目前沒有需要你決定的事。</span>
+    </p>
+  </div>
+
+  <div id="cine" hidden>
+    <canvas id="cine-canvas" width="192" height="144"></canvas>
+    <div id="cine-cap"><span class="en"></span><span class="zh"></span></div>
+    <button id="cine-skip">SKIP · 跳過</button>
+  </div>
+
+  <div id="modal" hidden>
+    <div class="modal-box">
+      <div class="modal-en" id="modal-en">RETALIATION PLAN EXECUTING UNDER DOCTRINE</div>
+      <div class="modal-zh" id="modal-zh">依準則執行反擊計畫</div>
+      <div class="modal-count" id="modal-count">5</div>
+    </div>
+  </div>
+
+  <section class="ending" id="after" hidden>
+    <div class="verdict"><span class="en">WATCH ENDED</span><span class="zh">這一班結束了</span></div>
+    <p class="bl">
+      <span class="en">Someone sat in this chair on the night of 26 September 1983. What would you have done?</span>
+      <span class="zh">1983 年 9 月 26 日的深夜，真的有人坐在這個位置上。如果是你，你會怎麼做？</span>
+    </p>
+    <button class="ghost" id="again2">RUN AGAIN · 再值一次班</button>
+  </section>
+
+  <section class="ending" id="ending" hidden>
+    <div class="verdict" id="end-verdict"></div>
+    <div id="end-body"></div>
+    <div class="sheet">
+      <h3>WATCH LOG · 值勤紀錄</h3>
+      <dl id="end-sheet"></dl>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var TOTAL = 110;
+  var el = function (id) { return document.getElementById(id); };
+
+  var brief1 = el('brief1'), brief2 = el('brief2'), stage = el('stage'), actions = el('actions'),
+      ending = el('ending'), cine = el('cine');
+  var meter = el('meter'), fill = el('meter-fill'), clock = el('clock'), impact = el('impact');
+  var sys = el('sys'), log = el('log'), scopeCount = el('scope-count'), busy = el('busy');
+  var bReport = el('btn-report'), bSilent = el('btn-silent'), bMal = el('btn-mal');
+  var modal = el('modal'), mCount = el('modal-count');
+  var seqT1 = null, seqIv = null, seqT2 = null;
+  var cRadar = el('chk-radar'), cLog = el('chk-log'), cHq = el('chk-hq');
+  var cv = el('scope'), cx = cv.getContext('2d');
+
+  var TRACKS = [
+    { at: 3, ang: -38 }, { at: 11, ang: -62 }, { at: 15, ang: -24 },
+    { at: 18, ang: -50 }, { at: 21, ang: -14 }
+  ];
+
+  var SCRIPT = [
+    { t: 0,  kind: 'calm', tag: 'SPRN',    en: 'Self-test complete. Network nominal, no anomalies.', zh: '系統自檢完成。全網監控中，無異常。' },
+    { t: 3,  kind: 'warn', tag: 'ALERT',   en: '<b>ONE</b> ICBM launch detected. Origin: continental US, Montana bearing.', zh: '偵測到<b>一枚</b>洲際飛彈發射。來源：美國本土，蒙大拿方向。' },
+    { t: 8,  kind: 'warn', tag: 'UPGRADE', en: 'Confidence level raised to <b>HIGHEST</b>.', zh: '系統將事件可信度標示為<b>「最高」</b>。' },
+    { t: 5,  kind: 'info', tag: 'COMMAND', en: 'Headquarters: duty officer required to confirm status.', zh: '指揮部：要求值班人員確認狀態。' },
+    { t: 11, kind: 'warn', tag: 'ALERT',   en: 'Second launch detected.', zh: '偵測到第二枚。' },
+    { t: 13, kind: 'info', tag: 'COMMAND', en: 'Headquarters: duty officer required to confirm status.', zh: '指揮部：要求值班人員確認狀態。' },
+    { t: 15, kind: 'warn', tag: 'ALERT',   en: 'Third launch detected.', zh: '偵測到第三枚。' },
+    { t: 17, kind: 'info', tag: 'COMMAND', en: 'Headquarters: duty officer required to confirm status.', zh: '指揮部：要求值班人員確認狀態。' },
+    { t: 18, kind: 'warn', tag: 'ALERT',   en: 'Fourth launch detected.', zh: '偵測到第四枚。' },
+    { t: 20, kind: 'info', tag: 'COMMAND', en: 'Headquarters: duty officer required to confirm status.', zh: '指揮部：要求值班人員確認狀態。' },
+    { t: 21, kind: 'warn', tag: 'ALERT',   en: 'Fifth launch detected. <b>FIVE</b> inbound.', zh: '偵測到第五枚。累計<b>五枚</b>來襲。' },
+    { t: 23, kind: 'info', tag: 'COMMAND', en: 'Headquarters: duty officer required to confirm status.', zh: '指揮部：要求值班人員確認狀態。' },
+    { t: 23, kind: 'finding', tag: 'SPRN', en: 'All launches plotted. <b>VERIFICATION AND DECISION CHANNELS NOW OPEN.</b>', zh: '所有發射已標定。<b>開放查證管道與決策選擇。</b>' },
+    { t: 44, kind: 'info', tag: 'COMMAND', en: 'Headquarters: duty officer required to confirm status.', zh: '指揮部：要求值班人員確認狀態。' },
+    { t: 62, kind: 'warn', tag: 'COMMAND', en: 'Headquarters again. <b>They require your confirmation.</b>', zh: '指揮部再次來電。<b>他們要求你確認。</b>' },
+    { t: 88, kind: 'warn', tag: 'COMMAND', en: 'Final call: <b>confirm the warning immediately.</b>', zh: '最後一次來電：<b>請盡速確認資訊。</b>' },
+    { t: 101,kind: 'calm', tag: 'POST',    en: 'No one is going to make this call for you.', zh: '沒有人會替你按下這個決定。' }
+  ];
+
+  var t, fired, timer, done, started, t0, dyn, tally, order, busyUntil, busyLabel;
+
+  function reset() {
+    t = 0; fired = 0; done = false; started = false; t0 = 0;
+    dyn = []; tally = { radar: 0, log: 0, hq: 0 }; order = [];
+    busyUntil = -1; busyLabel = ['', ''];
+  }
+  reset();
+
+  function two(n) { return (n < 10 ? '0' : '') + n; }
+  function stamp(s) { var x = 845 + s; return '00:' + two(Math.floor(x / 60)) + ':' + two(x % 60); }
+
+  function add(item) {
+    var d = document.createElement('div');
+    d.className = 'entry ' + (item.kind === 'warn' ? 'warn' : item.kind === 'finding' ? 'finding' : '');
+    d.innerHTML =
+      '<div class="head"><span>' + stamp(item.t) + '</span><span>' + item.tag + '</span></div>' +
+      '<span class="en">' + item.en + '</span>' +
+      '<span class="zh">' + item.zh + '</span>';
+    log.appendChild(d);
+    while (log.children.length > 14) log.removeChild(log.firstChild);
+  }
+
+  /* ---------- radar scope ---------- */
+  function activeTracks(now) {
+    var out = [];
+    for (var i = 0; i < TRACKS.length; i++) {
+      var tr = TRACKS[i];
+      if (now < tr.at) continue;
+      var p = Math.min(1, (now - tr.at) / (TOTAL - tr.at));
+      out.push({ ang: tr.ang, r: 1 - 0.86 * p, n: i + 1 });
+    }
+    return out;
+  }
+
+  var sweepGrad = null;
+  function drawScope(now, sweepDeg) {
+    var W = cv.width, C = W / 2, R = W / 2 - 14;
+    cx.clearRect(0, 0, W, W);
+    cx.fillStyle = '#04120A';
+    cx.beginPath(); cx.arc(C, C, R, 0, Math.PI * 2); cx.fill();
+
+    cx.strokeStyle = 'rgba(53,232,122,0.26)'; cx.lineWidth = 1.6;
+    for (var k = 1; k <= 4; k++) { cx.beginPath(); cx.arc(C, C, R * k / 4, 0, Math.PI * 2); cx.stroke(); }
+    cx.beginPath();
+    cx.moveTo(C - R, C); cx.lineTo(C + R, C);
+    cx.moveTo(C, C - R); cx.lineTo(C, C + R);
+    cx.stroke();
+
+    cx.strokeStyle = 'rgba(53,232,122,0.6)'; cx.lineWidth = 2.4;
+    cx.beginPath(); cx.arc(C, C, R, 0, Math.PI * 2); cx.stroke();
+
+    var sw = sweepDeg * Math.PI / 180;
+    if (!sweepGrad) {
+      sweepGrad = cx.createRadialGradient(C, C, 0, C, C, R);
+      sweepGrad.addColorStop(0, 'rgba(53,232,122,0.28)');
+      sweepGrad.addColorStop(1, 'rgba(53,232,122,0)');
+    }
+    cx.fillStyle = sweepGrad;
+    cx.beginPath(); cx.moveTo(C, C);
+    cx.arc(C, C, R, sw - Math.PI / 2 - 0.55, sw - Math.PI / 2);
+    cx.closePath(); cx.fill();
+
+    cx.strokeStyle = 'rgba(123,255,176,0.85)'; cx.lineWidth = 2;
+    cx.beginPath(); cx.moveTo(C, C);
+    cx.lineTo(C + R * Math.cos(sw - Math.PI / 2), C + R * Math.sin(sw - Math.PI / 2));
+    cx.stroke();
+
+    var tracks = activeTracks(now);
+    for (var i = 0; i < tracks.length; i++) {
+      var tr = tracks[i];
+      var a = (tr.ang - 90) * Math.PI / 180;
+      var x = C + R * tr.r * Math.cos(a), y = C + R * tr.r * Math.sin(a);
+      cx.strokeStyle = 'rgba(255,74,61,0.22)'; cx.lineWidth = 1.4;
+      cx.beginPath();
+      cx.moveTo(C + R * Math.cos(a), C + R * Math.sin(a));
+      cx.lineTo(x, y); cx.stroke();
+
+      var diff = Math.abs(((sweepDeg % 360) - ((tr.ang + 360) % 360) + 540) % 360 - 180);
+      var glow = Math.max(0.45, 1 - diff / 70);
+      cx.fillStyle = 'rgba(255,74,61,' + (glow * 0.28).toFixed(2) + ')';
+      cx.beginPath(); cx.arc(x, y, 15, 0, Math.PI * 2); cx.fill();
+      cx.fillStyle = 'rgba(255,74,61,' + glow.toFixed(2) + ')';
+      cx.beginPath(); cx.arc(x, y, 7, 0, Math.PI * 2); cx.fill();
+      cx.fillStyle = 'rgba(255,140,130,' + Math.max(0.55, glow).toFixed(2) + ')';
+      cx.font = '600 20px "IBM Plex Mono", monospace';
+      cx.fillText(String(tr.n), x + 12, y - 9);
+    }
+    scopeCount.textContent = 'TRACKS ' + tracks.length;
+  }
+
+  var raf = null, lastDraw = 0;
+  function loop(ts) {
+    raf = requestAnimationFrame(loop);
+    var now = ts || 0;
+    if (now - lastDraw < 50) return;          // 上限約每秒 20 格
+    lastDraw = now;
+    var el = started ? Math.min(TOTAL, (Date.now() - t0) / 1000) : 0;
+    var sweep = (Date.now() / 1000 * 90) % 360;
+    drawScope(el, sweep);
+  }
+
+  /* ---------- checks (可重複) ---------- */
+  var COST = { radar: 12, log: 10, hq: 6 };
+  var CNAME = { radar: '地面雷達複查', log: '衛星故障紀錄', hq: '回覆指揮部' };
+  var CLABEL = {
+    radar: ['Ground radar running another pass…', '地面雷達掃描中…'],
+    log:   ['Retrieving satellite fault record…', '調閱衛星故障紀錄中…'],
+    hq:    ['Holding headquarters…', '回覆指揮部中…']
+  };
+
+  function findingFor(key, n) {
+    if (key === 'radar') {
+      return { kind: 'finding', tag: 'RADAR',
+        en: 'Pass ' + (n + 1) + ' complete: <b>GROUND RADAR SEES NOTHING.</b>',
+        zh: '第 ' + (n + 1) + ' 次掃描完成：<b>地面雷達上什麼都沒有。</b>' };
+    }
+    if (key === 'log') {
+      return { kind: 'finding', tag: 'RECORD',
+        en: n === 1 ? 'System in operation under one year. <b>REPEATED ANOMALIES ON RECORD.</b>'
+                    : 'Checked again. <b>SAME RECORD. REPEATED ANOMALIES.</b>',
+        zh: n === 1 ? '系統啟用未滿一年。<b>紀錄顯示多次異常。</b>'
+                    : '再次調閱，結果相同。<b>紀錄顯示多次異常。</b>' };
+    }
+    return { kind: 'info', tag: 'COMMAND',
+      en: n === 1 ? 'You tell them you are still verifying. They will call back.'
+                  : 'You ask for more time again. Their tone has changed.',
+      zh: n === 1 ? '你回覆仍在查證。他們會再打來。'
+                  : '你再次要求時間。他們的語氣變了。' };
+  }
+
+  function refreshCounts() {
+    ['radar', 'log', 'hq'].forEach(function (k) {
+      var s = tally[k] ? '　×' + tally[k] : '';
+      el('n-' + k).textContent = s;
+      el('m-' + k).textContent = s;
+    });
+  }
+
+  function setButtons(on) {
+    var open = on && t >= CHECKS_OPEN;
+    bReport.disabled = !open; bSilent.disabled = !open; bMal.disabled = !open;
+    cRadar.disabled = !open; cLog.disabled = !open; cHq.disabled = !open;
+  }
+
+  var CHECKS_OPEN = 23;
+
+  function runCheck(key) {
+    if (done || t < CHECKS_OPEN || busyUntil > t) return;
+    tally[key]++; order.push(key);
+    refreshCounts();
+    busyUntil = t + COST[key];
+    busyLabel = CLABEL[key];
+    var f = findingFor(key, tally[key]);
+    dyn.push({ t: busyUntil, kind: f.kind, tag: f.tag, en: f.en, zh: f.zh });
+    if (key === 'hq') {
+      dyn.push({ t: Math.min(TOTAL - 2, busyUntil + 14), kind: 'warn', tag: 'COMMAND',
+        en: 'Headquarters calling back. <b>They require your confirmation.</b>',
+        zh: '指揮部再度來電。<b>他們要求你確認。</b>' });
+    }
+    setButtons(false);
+  }
+
+  /* ---------- clock ---------- */
+  function tick() {
+    t += 1;
+    clock.textContent = '26.09.1983 · ' + stamp(t);
+    var left = Math.max(0, TOTAL - t);
+    impact.textContent = 'IMPACT T−' + two(Math.floor(left / 60)) + ':' + two(left % 60);
+    fill.style.transform = 'scaleX(' + (left / TOTAL) + ')';
+
+    while (fired < SCRIPT.length && SCRIPT[fired].t <= t) {
+      var item = SCRIPT[fired++];
+      add(item);
+      if (item.kind === 'warn' && !document.body.classList.contains('alert')) {
+        document.body.classList.add('alert');
+        sys.textContent = 'TREVOGA / ТРЕВОГА';
+        setButtons(true);
+        el('hint-en').textContent = 'Hold. Verification and decision channels are not open yet.';
+        el('hint-zh').textContent = ' · 稍候。查證與決定管道尚未開放。';
+      }
+    }
+
+    for (var i = dyn.length - 1; i >= 0; i--) {
+      if (dyn[i].t <= t) { add(dyn[i]); dyn.splice(i, 1); }
+    }
+
+    if (busyUntil > t) {
+      busy.textContent = busyLabel[0] + ' · ' + busyLabel[1] + '  (' + (busyUntil - t) + 's)';
+    } else {
+      if (busyUntil === t) { busyUntil = -1; if (!done) setButtons(true); }
+      if (t === CHECKS_OPEN && !done) {
+        setButtons(true);
+        el('hint-en').textContent = 'You may decide at any moment. Doing nothing is also a decision.';
+        el('hint-zh').textContent = ' · 你可以隨時決定。不做決定，也是一種決定。';
+      }
+      busy.textContent = (t < CHECKS_OPEN && document.body.classList.contains('alert'))
+        ? ('CHANNELS OPEN IN ' + (CHECKS_OPEN - t) + 's · 查證與決定 ' + (CHECKS_OPEN - t) + ' 秒後開放')
+        : '';
+    }
+
+    if (t >= TOTAL) decide('timeout');
+  }
+
+  /* ================= 8-bit 過場 ================= */
+  var cc = el('cine-canvas'), g2 = cc.getContext('2d');
+  var capEn = cine.querySelector('.en'), capZh = cine.querySelector('.zh');
+  var P = { bg:'#0B0B0F', wall:'#1A1C26', floor:'#101219', grey:'#4A4D5E',
+            lite:'#9AA0B4', white:'#F4F6F8', red:'#D83A2A', hot:'#FF7A4A',
+            amber:'#F2B23C', dim:'#2A2C3A', land:'#25404A', land2:'#1A2E36' };
+
+  function px(x, y, w, h, c) { g2.fillStyle = c; g2.fillRect(x | 0, y | 0, w | 0, h | 0); }
+  function clearC(c) { px(0, 0, 192, 144, c || P.bg); }
+  function figure(x, y, c, lean) { px(x + 1, y - (lean || 0), 6, 6, c); px(x, y + 6, 8, 10, c); }
+
+  function stars(k, n) {
+    for (var s = 0; s < n; s++) {
+      var sx = (s * 47) % 192, sy = (s * 29) % 96;
+      if ((s + k) % 4) px(sx, sy, 1, 1, '#2E3244');
+    }
+  }
+
+  // 第一、二幕：指揮部的雷達畫面（locked = 已確認、套上瞄準框）
+  function sceneRadarView(k, locked) {
+    clearC('#05070E');
+    var C = 96, CY = 64, R = 50;
+    g2.fillStyle = locked ? '#1C0A08' : '#07160E';
+    g2.beginPath(); g2.arc(C, CY, R, 0, Math.PI * 2); g2.fill();
+
+    g2.strokeStyle = locked ? 'rgba(216,58,42,0.55)' : 'rgba(75,216,106,0.45)';
+    g2.lineWidth = 1;
+    for (var i = 1; i <= 3; i++) { g2.beginPath(); g2.arc(C, CY, R * i / 3, 0, Math.PI * 2); g2.stroke(); }
+    g2.beginPath();
+    g2.moveTo(C - R, CY); g2.lineTo(C + R, CY);
+    g2.moveTo(C, CY - R); g2.lineTo(C, CY + R);
+    g2.stroke();
+
+    var a = (k * 0.38) % (Math.PI * 2);
+    g2.strokeStyle = locked ? 'rgba(255,122,74,0.9)' : 'rgba(123,255,176,0.9)';
+    g2.lineWidth = 1;
+    g2.beginPath(); g2.moveTo(C, CY);
+    g2.lineTo(C + R * Math.cos(a), CY + R * Math.sin(a)); g2.stroke();
+
+    var pts = [[-38, 0.62], [-62, 0.70], [-24, 0.54], [-50, 0.66], [-14, 0.58]];
+    for (var j = 0; j < pts.length; j++) {
+      var ang = (pts[j][0] - 90) * Math.PI / 180, rr = pts[j][1] * R;
+      var x = C + rr * Math.cos(ang), y = CY + rr * Math.sin(ang);
+      if (!locked && (k + j) % 9 === 0) continue;
+      px(x - 2, y - 2, 5, 5, P.red);
+      if (locked) {
+        px(x - 6, y - 6, 13, 1, P.hot); px(x - 6, y + 6, 13, 1, P.hot);
+        px(x - 6, y - 6, 1, 13, P.hot); px(x + 6, y - 6, 1, 13, P.hot);
+      }
+    }
+
+    px(0, 122, 192, 22, locked ? '#2A0A06' : '#101219');
+    px(0, 122, 192, 1, locked ? P.hot : P.dim);
+    for (var m = 0; m < 12; m++) {
+      px(6 + m * 15, 130, 10, 6, (m + k) % 3 ? '#1A2E36' : (locked ? P.hot : P.grey));
+    }
+  }
+
+  // 第三幕：兩把鑰匙同時轉動（two-man rule）
+  function sceneKeys(k, p) {
+    clearC('#0B0B0F');
+    px(0, 0, 192, 50, '#12141C');
+    px(20, 50, 152, 72, P.grey);
+    px(24, 54, 144, 64, '#1A1C26');
+
+    var slots = [60, 132], turned = p > 0.45;
+    for (var i = 0; i < 2; i++) {
+      var sx = slots[i];
+      px(sx - 13, 64, 26, 26, P.dim);
+      px(sx - 11, 66, 22, 22, '#0F1118');
+      if (turned) px(sx - 9, 75, 18, 4, P.amber);
+      else px(sx - 2, 68, 4, 18, P.amber);
+      px(sx - 3, 74, 6, 6, P.lite);
+    }
+    px(2, 72, 44, 10, P.lite); px(146, 72, 44, 10, P.lite);
+    px(2, 82, 44, 4, '#6B7080'); px(146, 82, 44, 4, '#6B7080');
+
+    var lit = p > 0.75;
+    px(78, 96, 36, 14, lit ? ((k % 2) ? P.red : P.hot) : '#2A0A06');
+    px(78, 96, 36, 2, lit ? P.white : P.dim);
+    px(84, 100, 24, 6, lit ? '#FFD2CC' : '#1A1C26');
+
+    px(20, 124, 152, 12, '#12141C');
+    for (var n = 0; n < 8; n++) {
+      px(26 + n * 18, 128, 12, 4, (n + k) % 2 ? (lit ? P.red : P.dim) : '#1A1C26');
+    }
+  }
+
+  function sceneLaunch(k, p) {
+    clearC(P.bg); stars(k, 22);
+    px(0, 112, 192, 32, P.floor);
+    px(0, 110, 192, 2, P.dim);
+    var silos = [30, 92, 152];
+    for (var i = 0; i < silos.length; i++) {
+      var bx = silos[i];
+      px(bx - 10, 104, 20, 8, P.grey);
+      px(bx - 8, 102, 7, 3, P.dim);
+      px(bx + 1, 102, 7, 3, P.dim);
+      var rise = p * (110 + i * 10), my = 100 - rise;
+      if (rise > 0) {
+        px(bx - 2, my, 4, 14, P.white);
+        px(bx - 2, my - 3, 4, 3, P.red);
+        var f = (k % 2) ? 6 : 4;
+        px(bx - 2, my + 14, 4, f, P.amber);
+        px(bx - 1, my + 14 + f, 2, f, P.hot);
+      }
+    }
+  }
+
+  // 世界：左 = 蘇聯，右 = 美國
+  function world(k, leftBurn, rightBurn) {
+    clearC('#05070E'); stars(k, 26);
+    g2.fillStyle = P.land2;
+    g2.beginPath(); g2.arc(96, 268, 168, 0, Math.PI * 2); g2.fill();
+    g2.fillStyle = P.land;
+    g2.beginPath(); g2.arc(96, 272, 168, 0, Math.PI * 2); g2.fill();
+    // 兩塊陸地標記
+    px(14, 104, 44, 5, leftBurn ? '#5A2A22' : '#2E5560');
+    px(134, 104, 44, 5, rightBurn ? '#5A2A22' : '#2E5560');
+  }
+
+  function mushroom(cxp, groundY, p, k) {
+    if (p <= 0) return;
+    var h = 4 + p * 30;
+    var capW = 6 + p * 34;
+    var flick = (k % 2) ? 0 : 1;
+    px(cxp - 3, groundY - h, 6, h, p < 0.5 ? P.hot : P.amber);              // 柱
+    px(cxp - capW / 2, groundY - h - 10, capW, 9, P.grey);                  // 蕈狀雲
+    px(cxp - capW / 2 + 2, groundY - h - 14, capW - 4, 5, P.lite);
+    px(cxp - capW / 4, groundY - h - 4, capW / 2, 5, P.white);
+    px(cxp - 8 - flick, groundY - 4, 16 + flick * 2, 4, P.hot);             // 地面火光
+  }
+
+  function sceneArc(k, p, dir) {
+    world(k, false, dir < 0);
+    for (var i = 0; i < 5; i++) {
+      var a0 = dir > 0 ? 24 + i * 6 : 168 - i * 6;
+      var a1 = dir > 0 ? 138 + i * 8 : 54 - i * 8;
+      for (var q = 0; q <= 1.0001; q += 0.02) {
+        if (q > p) break;
+        var x = a0 + (a1 - a0) * q;
+        var y = 104 - Math.sin(q * Math.PI) * (52 + i * 5);
+        px(x, y, 1, 1, '#5A3A46');
+      }
+      var qq = Math.min(1, p);
+      var hx = a0 + (a1 - a0) * qq;
+      var hy = 104 - Math.sin(qq * Math.PI) * (52 + i * 5);
+      px(hx - 1, hy - 1, 3, 3, P.red);
+    }
+  }
+
+  function sceneImpact(k, p, side) {
+    world(k, side === 'left', side === 'right' || side === 'both');
+    if (side === 'right' || side === 'both') {
+      mushroom(146, 104, p, k); mushroom(166, 104, Math.max(0, p - 0.25), k);
+    }
+    if (side === 'left' || side === 'both') {
+      mushroom(30, 104, p, k); mushroom(50, 104, Math.max(0, p - 0.25), k);
+    }
+    if (p < 0.18) { g2.fillStyle = 'rgba(244,246,248,' + (0.9 - p * 5).toFixed(2) + ')'; g2.fillRect(0, 0, 192, 144); }
+  }
+
+  function sceneSilence(k, leftOnly) {
+    world(k, true, !leftOnly);
+    if (!leftOnly) { mushroom(146, 104, 1, k); mushroom(166, 104, 1, k); }
+    mushroom(30, 104, 1, k); mushroom(50, 104, 1, k);
+    g2.fillStyle = 'rgba(5,7,14,0.45)'; g2.fillRect(0, 0, 192, 144);
+  }
+
+  function sceneFade(a) { clearC(P.bg); g2.fillStyle = 'rgba(0,0,0,' + a.toFixed(2) + ')'; g2.fillRect(0, 0, 192, 144); }
+
+  var MARKS_STRUCK = [
+    { until: 3.0,  cap: ['TRACKS STILL CLOSING', '目標持續接近'] },
+    { until: 5.6,  cap: ['NO INTERCEPT — IMPACT IMMINENT', '無任何攔截　即將命中'] },
+    { until: 9.0,  cap: ['WARHEADS INBOUND', '彈頭來襲'] },
+    { until: 11.6, cap: ['IMPACT', '命中'] },
+    { until: 15.0, cap: ['A HEAVY PRICE', '因為你的疏忽，國家付出慘痛代價'] },
+    { until: 16.6, cap: ['', ''] }
+  ];
+
+  var MARKS = [
+    { until: 3.0,  cap: ['YOUR REPORT RECEIVED — 5 TRACKS', '最高統帥部收到你的報告　五個目標'] },
+    { until: 6.0,  cap: ['ATTACK CONFIRMED', '確認飛彈來襲'] },
+    { until: 8.6,  cap: ['TWO KEYS TURNED — AUTHORIZED', '兩把鑰匙同時轉動　授權完成'] },
+    { until: 11.6, cap: ['LAUNCH', '發射'] },
+    { until: 14.8, cap: ['WARHEADS OUTBOUND — 22 MIN', '彈頭離境　二十二分鐘'] },
+    { until: 17.0, cap: ['IMPACT', '命中'] },
+    { until: 20.2, cap: ['THEY LAUNCHED TOO', '對方也發射了'] },
+    { until: 22.4, cap: ['IMPACT', '命中'] },
+    { until: 25.4, cap: ['NOBODY WON', '沒有人贏'] },
+    { until: 27.0, cap: ['', ''] }
+  ];
+
+  var cineRaf = null, cineT0 = 0, cineDone = null, capOverride = null, cineMode = 'mutual';
+  var CAP_UNCONFIRMED = [
+    ['NO CONFIRMATION FROM DUTY OFFICER', '未能取得值班軍官確認'],
+    ['PROCEEDING UNDER STANDING DOCTRINE', '依照準則進入核反擊階段']
+  ];
+
+  function cineFrame() {
+    var e = (Date.now() - cineT0) / 1000, k = Math.floor(e * 6);
+    var marks = (cineMode === 'struck') ? MARKS_STRUCK : MARKS;
+    var endAt = (cineMode === 'struck') ? 16.6 : 27.0;
+    var idx = 0;
+    while (idx < marks.length - 1 && e > marks[idx].until) idx++;
+
+    if (cineMode === 'struck') {
+      if (e <= 3.0) sceneRadarView(k, false);
+      else if (e <= 5.6) sceneRadarView(k, true);
+      else if (e <= 9.0) sceneArc(k, Math.min(1, (e - 5.6) / 3.2), -1);
+      else if (e <= 11.6) sceneImpact(k, Math.min(1, (e - 9.0) / 2.2), 'left');
+      else if (e <= 15.0) sceneSilence(k, true);
+      else sceneFade(Math.min(1, (e - 15.0) / 1.4));
+    } else {
+      if (e <= 3.0) sceneRadarView(k, false);
+      else if (e <= 6.0) sceneRadarView(k, true);
+      else if (e <= 8.6) sceneKeys(k, Math.min(1, (e - 6.0) / 2.2));
+      else if (e <= 11.6) sceneLaunch(k, Math.min(1, (e - 8.6) / 2.8));
+      else if (e <= 14.8) sceneArc(k, Math.min(1, (e - 11.6) / 3.0), 1);
+      else if (e <= 17.0) sceneImpact(k, Math.min(1, (e - 14.8) / 2.0), 'right');
+      else if (e <= 20.2) sceneArc(k, Math.min(1, (e - 17.0) / 3.0), -1);
+      else if (e <= 22.4) sceneImpact(k, Math.min(1, (e - 20.2) / 2.0), 'both');
+      else if (e <= 25.4) sceneSilence(k, false);
+      else sceneFade(Math.min(1, (e - 25.4) / 1.4));
+    }
+
+    var cap = (capOverride && idx < 2) ? capOverride[idx] : marks[idx].cap;
+    if (capEn.textContent !== cap[0]) { capEn.textContent = cap[0]; capZh.textContent = cap[1]; }
+
+    if (e >= endAt) { stopCine(); return; }
+    cineRaf = requestAnimationFrame(cineFrame);
+  }
+
+  function stopCine() {
+    if (cineRaf) { cancelAnimationFrame(cineRaf); cineRaf = null; }
+    cine.hidden = true;
+    document.body.classList.remove('cine');
+    if (cineDone) { var f = cineDone; cineDone = null; f(); }
+  }
+
+  function playCine(after, unconfirmed, mode) {
+    cineDone = after;
+    cineMode = mode || 'mutual';
+    capOverride = unconfirmed ? CAP_UNCONFIRMED : null;
+    cine.hidden = false;
+    document.body.classList.add('cine');
+    var c0 = capOverride ? capOverride[0] : (cineMode === 'struck' ? MARKS_STRUCK[0].cap : MARKS[0].cap);
+    capEn.textContent = c0[0];
+    capZh.textContent = c0[1];
+    cineT0 = Date.now();
+    window.scrollTo(0, 0);
+    cineFrame();
+  }
+
+  /* ---------- 決定與結局 ---------- */
+  var MODAL_DOCTRINE = ['RETALIATION PLAN EXECUTING UNDER DOCTRINE', '依準則執行反擊計畫'];
+  var MODAL_IFBELIEVED = ['IF YOU HAD BELIEVED THE WARNING', '如果你選擇相信系統警報'];
+  var MODAL_IFREAL = ['IF THE ATTACK HAD BEEN REAL', '如果真的是敵襲⋯⋯'];
+
+  function decide(choice) {
+    if (done) return;
+    done = true;
+    clearInterval(timer);
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    document.body.classList.remove('alert', 'playing');
+    stage.hidden = true; actions.hidden = true; meter.hidden = true; impact.hidden = true;
+    sys.textContent = 'SPRN / СПРН';
+    clock.textContent = '26.09.1983 · WATCH ENDED';
+
+    var verified = (tally.radar + tally.log) > 0;
+    var path;
+    if (choice === 'report') {
+      path = { key: 'report', modal: null, mode: 'mutual', unconfirmed: false };
+    } else if (choice === 'silent') {
+      path = { key: 'silent', modal: MODAL_DOCTRINE, mode: 'mutual', unconfirmed: true };
+    } else if (choice === 'timeout') {
+      path = { key: 'timeout', modal: MODAL_DOCTRINE, mode: 'mutual', unconfirmed: true };
+    } else if (verified) {
+      path = { key: 'mal_checked', modal: MODAL_IFBELIEVED, mode: 'mutual', unconfirmed: false };
+    } else {
+      path = { key: 'mal_blind', modal: MODAL_IFREAL, mode: 'struck', unconfirmed: false };
+    }
+
+    showEnding(path.key);
+    runSequence(path);
+  }
+
+  function clearSeq() {
+    if (seqT1) { clearTimeout(seqT1); seqT1 = null; }
+    if (seqT2) { clearTimeout(seqT2); seqT2 = null; }
+    if (seqIv) { clearInterval(seqIv); seqIv = null; }
+    modal.hidden = true;
+  }
+
+  function showAfter() {
+    ending.hidden = true;
+    modal.hidden = true;
+    el('after').hidden = false;
+    window.scrollTo(0, 0);
+  }
+
+  function toCine(path) {
+    modal.hidden = true;
+    ending.hidden = true;
+    playCine(showAfter, path.unconfirmed, path.mode);
+  }
+
+  function runSequence(path) {
+    seqT1 = setTimeout(function () {
+      if (!path.modal) { toCine(path); return; }
+      el('modal-en').textContent = path.modal[0];
+      el('modal-zh').textContent = path.modal[1];
+      var n = 5;
+      mCount.textContent = n;
+      modal.hidden = false;
+      seqIv = setInterval(function () {
+        n -= 1;
+        mCount.textContent = String(Math.max(0, n));
+        if (n > 0) return;
+        clearInterval(seqIv); seqIv = null;
+        seqT2 = setTimeout(function () { toCine(path); }, 700);
+      }, 1000);
+    }, 6000);
+  }
+
+  function showEnding(key) {
+    var verdict = {
+      report:      ['ATTACK CONFIRMED', '你判斷系統警報屬實'],
+      silent:      ['NO ACTION', '你選擇不處置'],
+      mal_checked: ['JUDGED A SYSTEM ERROR', '你判定為系統誤報'],
+      mal_blind:   ['JUDGED A SYSTEM ERROR', '你判定為系統誤報'],
+      timeout:     ['NO DECISION', '你沒有做決定']
+    }[key];
+
+    var body = {
+      report: [
+        ['Headquarters will act on your judgement and begin the counter-strike sequence.',
+         '指揮中心將依據你的判斷，啟動核反擊程序。', true],
+        ['The chain moved faster than you did. What happens now is no longer within your authority.',
+         '指揮鏈跑得比你快。接下來發生的事，已經不在你的權限範圍之內。', false],
+        ['Your watch log will be kept. Someone will go through it second by second.',
+         '你這一班的值勤紀錄會被保存。事後有人會逐秒檢查你做了什麼、什麼時候做的。', false]
+      ],
+      silent: [
+        ['You took no action. Headquarters could not confirm the tracks with you, and acted on the system warning under standing doctrine.',
+         '你沒有處置。指揮中心無法從你這裡確認目標，依照準則逕行處置。', true],
+        ['Silence stopped nothing. It only took your name off the decision.',
+         '沉默沒有阻止任何事，它只是把你的名字從這個決定上拿掉了。', false],
+        ['Your watch log will be kept. Someone will go through it second by second.',
+         '你這一班的值勤紀錄會被保存。事後有人會逐秒檢查你做了什麼、什麼時候做的。', false]
+      ],
+      mal_checked: [
+        ['Nothing happens. The alarm stays on your screen and goes no further.',
+         '什麼都沒有發生。警報留在你的螢幕上，不會再往上傳。', false],
+        ['For the next twenty minutes you sit where you are.',
+         '接下來的二十幾分鐘，你只能坐在原地。', false],
+        ['IT REALLY WAS A SYSTEM ERROR. YOUR CAUTION SAVED THE WORLD.',
+         '「實際上真的是系統誤判」——你的謹慎拯救了世界。', true]
+      ],
+      mal_blind: [
+        ['You ran no checks at all before calling it an error. You placed national security on a snap personal judgement.',
+         '你未做任何查證便判斷誤報。你將國家安全置於你個人草率的判斷之下。', true],
+        ['Your watch log will be kept. Someone will go through it second by second.',
+         '你這一班的值勤紀錄會被保存。事後有人會逐秒檢查你做了什麼、什麼時候做的。', false]
+      ],
+      timeout: [
+        ['Headquarters could not obtain confirmation of the inbound tracks from the duty officer. Under standing doctrine, the counter-strike sequence proceeded.',
+         '指揮中心未能從值班軍官處確認來襲飛彈資訊，依照準則進入核反擊階段。', true],
+        ['In this chair, not deciding is a decision — and it is the one nobody signs.',
+         '在這個位置上，不做決定本身就是一個決定——而且是沒有人會簽名的那一個。', false]
+      ]
+    }[key];
+
+    el('end-verdict').innerHTML = '<span class="en">' + verdict[0] + '</span><span class="zh">' + verdict[1] + '</span>';
+    el('end-body').innerHTML = body.map(function (para) {
+      var cls = para[2] ? 'bl alarm' : 'bl';
+      return '<p class="' + cls + '"><span class="en">' + para[0] + '</span><span class="zh">' + para[1] + '</span></p>';
+    }).join('');
+
+    var parts = [];
+    for (var k in tally) if (tally[k]) parts.push(CNAME[k] + ' ×' + tally[k]);
+    el('end-sheet').innerHTML =
+      '<dt>DECIDED AT · 決定時點</dt><dd>' + (key === 'timeout' ? '—' : '第 ' + t + ' 秒') + '</dd>' +
+      '<dt>CHECKS RUN · 查證次數</dt><dd>' + order.length + '</dd>' +
+      '<dt>WHICH · 查了什麼</dt><dd>' + (parts.length ? parts.join('、') : '沒有查證') + '</dd>';
+
+    el('after').hidden = true;
+    ending.hidden = false;
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- wiring ---------- */
+  el('next1').addEventListener('click', function () {
+    brief1.hidden = true; brief2.hidden = false;
+    window.scrollTo(0, 0);
+  });
+
+  el('go').addEventListener('click', function () {
+    brief2.hidden = true;
+    stage.hidden = false; actions.hidden = false; meter.hidden = false; impact.hidden = false;
+    document.body.classList.add('playing');
+    started = true; t0 = Date.now();
+    window.scrollTo(0, 0);
+    timer = setInterval(tick, 1000);
+    tick();
+  });
+
+  cRadar.addEventListener('click', function () { runCheck('radar'); });
+  cLog.addEventListener('click', function () { runCheck('log'); });
+  cHq.addEventListener('click', function () { runCheck('hq'); });
+  bReport.addEventListener('click', function () { decide('report'); });
+  bSilent.addEventListener('click', function () { decide('silent'); });
+  bMal.addEventListener('click', function () { decide('malfunction'); });
+  el('cine-skip').addEventListener('click', stopCine);
+
+  function resetAll() {
+    clearInterval(timer);
+    if (cineRaf) { cancelAnimationFrame(cineRaf); cineRaf = null; }
+    cineDone = null;
+    clearSeq();
+    reset(); refreshCounts();
+    log.innerHTML = ''; busy.textContent = '';
+    document.body.classList.remove('alert', 'cine', 'playing');
+    sys.textContent = 'SPRN / СПРН';
+    ending.hidden = true; cine.hidden = true;
+    stage.hidden = true; actions.hidden = true; meter.hidden = true; impact.hidden = true;
+    brief2.hidden = true; brief1.hidden = false;
+    setButtons(false);
+    el('hint-en').textContent = 'Monitoring. Nothing requires your decision yet.';
+    el('hint-zh').textContent = ' · 監控中，目前沒有需要你決定的事。';
+    fill.style.transform = 'scaleX(1)';
+    clock.textContent = '26.09.1983 · 00:14:05';
+    scopeCount.textContent = 'TRACKS 0';
+    el('after').hidden = true;
+    if (!raf) loop();
+    window.scrollTo(0, 0);
+  }
+
+  el('again2').addEventListener('click', resetAll);
+
+  setButtons(false);
+  refreshCounts();
+  loop();
+})();
+</script>
+</body>
+</html>
